@@ -1,0 +1,10 @@
+{
+  "name": "vercel-ai-service",
+  "version": "2.0.0",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "@vercel/node": "^3.0.0",
+    "openai": "^4.20.1"
+  }
+}
