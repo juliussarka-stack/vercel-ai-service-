@@ -12,11 +12,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
-import {
-  Pass1Schema,
-  type ProjectPlan,
-  getPass2Prompt
-} from '../lib/ai-two-pass-schema';
+import { Pass1Schema, getPass2Prompt, type ProjectPlan } from '../lib/ai-two-pass-schema.js';
 
 export const config = {
   maxDuration: 60,
