@@ -228,10 +228,22 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+// 🔧 CORS FIX - Allow Webflow domains
+const allowedOrigins = [
+  'https://gesa-company-ab.webflow.io',
+  'https://gesa-company-ab-julius-projects-ccea11c8.webflow.io',
+  'http://localhost:4321',
+  'http://localhost:3000'
+];
+
+const origin = req.headers.origin;
+if (origin && allowedOrigins.includes(origin)) {
+  res.setHeader('Access-Control-Allow-Origin', origin);
+}
+
+res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
