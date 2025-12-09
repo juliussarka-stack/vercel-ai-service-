@@ -18,23 +18,23 @@ function req(pathNoExt) {
 const applyCors = require("./lib/cors.cjs");
 
 // Import libraries
-const workTasksDB = require("./lib/work-tasks-database.cjs");
-const materialsDB = require("./lib/materials-database.cjs");
-const rentalItemsDB = require("./lib/rental-items-database.cjs");
-const standardCatalog = require("./lib/standard-catalog.cjs");
-const fewShotDB = require("./lib/few-shot-database.cjs");
-const { formatOfferOutput } = require("./lib/offer-utils.cjs");
-const hourlyRates = require("./lib/hourly-rates.cjs");
-const reverseChargeUtils = require("./lib/reverse-charge-utils.cjs");
-const offerConstants = require("./lib/offer-constants.cjs");
+const workTasksDB = req("./lib/work-tasks-database");
+const materialsDB = req("./lib/materials-database");
+const rentalItemsDB = req("./lib/rental-items-database");
+const standardCatalog = req("./lib/standard-catalog");
+const fewShotDB = req("./lib/few-shot-database");
+const { formatOfferOutput } = req("./lib/offer-utils");
+const hourlyRates = req("./lib/hourly-rates");
+const reverseChargeUtils = req("./lib/reverse-charge-utils");
+const offerConstants = req("./lib/offer-constants");
 
 // AI utilities
-const aiDatabaseSearch = require("./lib/ai-database-search.cjs");
-const aiProcessOntology = require("./lib/ai-process-ontology.cjs");
-const aiTwoPassSchema = require("./lib/ai-two-pass-schema.cjs");
-const aiValidatorPolicy = require("./lib/ai-validator-policy.cjs");
-const advancedOfferAnalyzer = require("./lib/advanced-offer-analyzer.cjs");
-const offerLearning = require("./lib/offer-learning.cjs");
+const aiDatabaseSearch = req("./lib/ai-database-search");
+const aiProcessOntology = req("./lib/ai-process-ontology");
+const aiTwoPassSchema = req("./lib/ai-two-pass-schema");
+const aiValidatorPolicy = req("./lib/ai-validator-policy");
+const advancedOfferAnalyzer = req("./lib/advanced-offer-analyzer");
+const offerLearning = req("./lib/offer-learning");
 
 module.exports = async function handler(req, res) {
   if (applyCors(req, res)) {
