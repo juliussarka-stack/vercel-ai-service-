@@ -1,4 +1,33 @@
-/**
+// api/generate-offer-stream.ts
+// Version: 7.0.4-patch-4.3.5
+
+// Importera CORS helpern (CJS)
+const applyCors = require("./lib/cors.cjs");
+
+export default async function handler(req: any, res: any) {
+  // ✅ CORS + preflight
+  if (applyCors(req, res)) {
+    return res.status(204).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    // ...din befintliga stream-logik här...
+    // Viktigt: CORS-headers är redan satta innan streaming börjar.
+
+  } catch (err: any) {
+    console.error("[generate-offer-stream.ts] Error:", err);
+    return res.status(500).json({
+      error: "Internal server error",
+      message: err.message,
+      version: "7.0.4-patch-4.3.5",
+    });
+  }
+}
+**
  * VERCEL AI OFFER GENERATION - STREAMING VERSION
  * Version: 2.0.0 - SSE/Streaming
  * 
