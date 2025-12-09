@@ -1,3 +1,4 @@
+console.log("🔥 generate-offer-handler LOADED: 4.3.10-VERIFY-A");
 /**
  * Generate Offer Handler (CommonJS)
  * Version: 7.0.4-patch-4.3.9
