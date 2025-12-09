@@ -2,6 +2,18 @@
  * Generate Offer Endpoint (CommonJS)
  * Version: 7.0.4-patch-4.3.6
  */
+// Helper: require a module regardless of .cjs/.js extension
+function req(pathNoExt) {
+  try { 
+    return require(pathNoExt + ".cjs"); 
+  } catch (e1) {
+    try { 
+      return require(pathNoExt + ".js"); 
+    } catch (e2) { 
+      throw e1; 
+    }
+  }
+}
 
 const applyCors = require("./lib/cors.cjs");
 
