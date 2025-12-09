@@ -1,2 +1,1 @@
-import handler from "./process-offer-job.cjs";
-export default handler;
+module.exports = require("./process-offer-job.cjs");
