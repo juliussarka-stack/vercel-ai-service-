@@ -1,8 +1,7 @@
 // api/generate-offer.js
-// Version: 7.0.4-patch-4.3.7-inline-esm
+// Version: 7.0.4-patch-4.3.8
 
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
+export const config = { runtime: "nodejs" };
 
 function applyCors(req, res) {
   const origin = req.headers.origin;
@@ -13,7 +12,7 @@ function applyCors(req, res) {
     "https://preview.webflow.com",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://localhost:4321"
+    "http://localhost:4321",
   ];
 
   if (origin && allowedOrigins.some(a => origin.startsWith(a.replace(/\/$/, "")))) {
@@ -36,6 +35,7 @@ function applyCors(req, res) {
 export default async function handler(req, res) {
   if (applyCors(req, res)) return res.status(204).end();
 
-  const h = require("./generate-offer-handler.cjs"); // lazy-load
+  const mod = await import("./generate-offer-handler.cjs");
+  const h = mod.default || mod;
   return h(req, res);
 }
