@@ -1,2 +1,1 @@
-import handler from "./generate-offer.cjs";
-export default handler;
+module.exports = require("./generate-offer.cjs");
