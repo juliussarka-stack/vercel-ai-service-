@@ -1,3 +1,2 @@
-// ESM wrapper for Vercel discovery
-import handler from "./health.cjs";
-export default handler;
+// CJS wrapper for Vercel discovery
+module.exports = require("./health.cjs");
