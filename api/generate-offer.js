@@ -1,5 +1,8 @@
 // api/generate-offer.js
-// Version: 7.0.4-patch-4.3.7-inline
+// Version: 7.0.4-patch-4.3.7-inline-esm
+
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
 function applyCors(req, res) {
   const origin = req.headers.origin;
@@ -30,10 +33,9 @@ function applyCors(req, res) {
   return req.method === "OPTIONS";
 }
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (applyCors(req, res)) return res.status(204).end();
 
-  // Lazy-load to avoid heavy requires on preflight
-  const handler = require("./generate-offer-handler.cjs");
-  return handler(req, res);
-};
+  const h = require("./generate-offer-handler.cjs"); // lazy-load
+  return h(req, res);
+}
