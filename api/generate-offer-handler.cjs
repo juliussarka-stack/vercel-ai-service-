@@ -1,29 +1,32 @@
 /**
- * Generate Offer Endpoint (CommonJS)
- * Version: 7.0.4-patch-4.3.6
+ * Generate Offer Handler (CommonJS)
+ * Version: 7.0.4-patch-4.3.9
+ *
+ * NOTE: CORS is handled in the .js route files (4.3.8).
+ * This handler should NOT depend on cors.cjs anymore.
  */
+
 // Helper: require a module regardless of .cjs/.js extension
 function req(pathNoExt) {
-  try { 
-    return require(pathNoExt + ".cjs"); 
+  try {
+    return require(pathNoExt + ".cjs");
   } catch (e1) {
-    try { 
-      return require(pathNoExt + ".js"); 
-    } catch (e2) { 
-      throw e1; 
+    try {
+      return require(pathNoExt + ".js");
+    } catch (e2) {
+      throw e1;
     }
   }
 }
 
-const applyCors = require("./lib/cors.cjs");
-
-// Import libraries
+// Import libraries (extension-agnostic)
 const workTasksDB = req("./lib/work-tasks-database");
 const materialsDB = req("./lib/materials-database");
 const rentalItemsDB = req("./lib/rental-items-database");
 const standardCatalog = req("./lib/standard-catalog");
 const fewShotDB = req("./lib/few-shot-database");
 const { formatOfferOutput } = req("./lib/offer-utils");
+const { estimateHours } = req("./lib/work-time-estimates");
 const hourlyRates = req("./lib/hourly-rates");
 const reverseChargeUtils = req("./lib/reverse-charge-utils");
 const offerConstants = req("./lib/offer-constants");
@@ -36,23 +39,19 @@ const aiValidatorPolicy = req("./lib/ai-validator-policy");
 const advancedOfferAnalyzer = req("./lib/advanced-offer-analyzer");
 const offerLearning = req("./lib/offer-learning");
 
-module.exports = async function handler(req, res) {
-  if (applyCors(req, res)) {
-    return res.status(204).end();
-  }
-
-  if (req.method !== "POST") {
+module.exports = async function handler(req_, res) {
+  if (req_.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { projectDescription } = req.body;
+    const { projectDescription } = req_.body || {};
 
     if (!projectDescription) {
       return res.status(400).json({ error: "projectDescription is required" });
     }
 
-    // Feature flags
+    // Feature flags from environment
     const USE_FEWSHOT = process.env.USE_FEWSHOT === "true";
     const USE_AI_SEARCH = process.env.USE_AI_SEARCH === "true";
     const USE_ONTOLOGY = process.env.USE_ONTOLOGY === "true";
@@ -61,7 +60,7 @@ module.exports = async function handler(req, res) {
     const USE_ADVANCED_ANALYZER = process.env.USE_ADVANCED_ANALYZER === "true";
     const USE_LEARNING_SYSTEM = process.env.USE_LEARNING_SYSTEM === "true";
 
-    // Step 1: Ontology
+    // Step 1: Ontology processing (if enabled)
     let processedDescription = projectDescription;
     let ontologyMetadata = null;
 
@@ -71,8 +70,9 @@ module.exports = async function handler(req, res) {
       ontologyMetadata = ontologyResult.metadata;
     }
 
-    // Step 2: DB search
+    // Step 2: Database search (if enabled)
     let searchResults = null;
+
     if (USE_AI_SEARCH) {
       searchResults = await aiDatabaseSearch.searchDatabases(
         processedDescription,
@@ -80,7 +80,7 @@ module.exports = async function handler(req, res) {
       );
     }
 
-    // Step 3: Prompt
+    // Step 3: Build prompt
     let systemPrompt = "Du är en expert på byggofferthantering.";
     let userPrompt = `Projekt: ${processedDescription}`;
 
@@ -94,8 +94,9 @@ module.exports = async function handler(req, res) {
       userPrompt += `\n\nRelevanta material: ${JSON.stringify(searchResults.materials)}`;
     }
 
-    // Step 4: Two-pass schema
+    // Step 4: Two-pass schema validation (if enabled)
     let offerData;
+
     if (USE_TWO_PASS) {
       offerData = await aiTwoPassSchema.generateWithTwoPass({
         systemPrompt,
@@ -110,7 +111,7 @@ module.exports = async function handler(req, res) {
       };
     }
 
-    // Step 5: Validator
+    // Step 5: Policy validation (if enabled)
     if (USE_VALIDATOR) {
       const validation = await aiValidatorPolicy.validateOffer(offerData);
       if (!validation.isValid) {
@@ -118,14 +119,14 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // Step 6: Advanced analyzer
+    // Step 6: Advanced analysis (if enabled)
     if (USE_ADVANCED_ANALYZER) {
       const analysis = await advancedOfferAnalyzer.analyzeOffer(offerData);
       offerData.qualityMetrics = analysis.metrics;
       offerData.qualityScore = analysis.score;
     }
 
-    // Step 7: Learning
+    // Step 7: Learning system (if enabled)
     if (USE_LEARNING_SYSTEM) {
       await offerLearning.learnFromOffer({
         projectDescription,
@@ -139,7 +140,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      version: "7.0.4-patch-4.3.6",
+      version: "7.0.4-patch-4.3.9",
       offer: formattedOffer,
       metadata: {
         ontologyUsed: USE_ONTOLOGY,
@@ -155,7 +156,7 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({
       error: "Internal server error",
       message: error.message,
-      version: "7.0.4-patch-4.3.6"
+      version: "7.0.4-patch-4.3.9"
     });
   }
 };
