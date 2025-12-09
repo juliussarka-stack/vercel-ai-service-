@@ -4,35 +4,43 @@
  *
  * NOTE: CORS is handled in the .js route files (4.3.8).
  */
+/**
+ * Process Offer Job Handler (CommonJS)
+ * Version: 7.0.4-patch-4.3.10
+ *
+ * CORS handled in routes.
+ */
 
 const { createSupabaseClient } = require("../lib/supabase.cjs");
 
-// Helper: require a module regardless of .cjs/.js extension
-function req(pathNoExt) {
-  try {
-    return require(pathNoExt + ".cjs");
-  } catch (e1) {
-    try {
-      return require(pathNoExt + ".js");
-    } catch (e2) {
-      throw e1;
-    }
+function reqMulti(basename) {
+  const candidates = [
+    `../lib/${basename}.cjs`,
+    `../lib/${basename}.js`,
+    `../../src/lib/${basename}.cjs`,
+    `../../src/lib/${basename}.js`,
+    `../../src/lib/${basename}.ts`,
+  ];
+  for (const p of candidates) {
+    try { return require(p); } catch (_) {}
   }
+  throw new Error(`[reqMulti] Missing module for ${basename}. Tried:\n` + candidates.join("\n"));
 }
 
-// Import libraries (same as generate-offer, extension-agnostic)
-const workTasksDB = req("../lib/work-tasks-database");
-const materialsDB = req("../lib/materials-database");
-const rentalItemsDB = req("../lib/rental-items-database");
-const standardCatalog = req("../lib/standard-catalog");
-const fewShotDB = req("../lib/few-shot-database");
-const { formatOfferOutput } = req("../lib/offer-utils");
-const aiDatabaseSearch = req("../lib/ai-database-search");
-const aiProcessOntology = req("../lib/ai-process-ontology");
-const aiTwoPassSchema = req("../lib/ai-two-pass-schema");
-const aiValidatorPolicy = req("../lib/ai-validator-policy");
-const advancedOfferAnalyzer = req("../lib/advanced-offer-analyzer");
-const offerLearning = req("../lib/offer-learning");
+const workTasksDB = reqMulti("work-tasks-database");
+const materialsDB = reqMulti("materials-database");
+const rentalItemsDB = reqMulti("rental-items-database");
+const standardCatalog = reqMulti("standard-catalog");
+const fewShotDB = reqMulti("few-shot-database");
+const { formatOfferOutput } = reqMulti("offer-utils");
+
+const aiDatabaseSearch = reqMulti("ai-database-search");
+const aiProcessOntology = reqMulti("ai-process-ontology");
+const aiTwoPassSchema = reqMulti("ai-two-pass-schema");
+const aiValidatorPolicy = reqMulti("ai-validator-policy");
+const advancedOfferAnalyzer = reqMulti("advanced-offer-analyzer");
+const offerLearning = reqMulti("offer-learning");
+
 
 module.exports = async function handler(req_, res) {
   if (req_.method !== "POST") {
