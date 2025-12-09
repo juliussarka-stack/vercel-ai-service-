@@ -1,44 +1,52 @@
 /**
- * Process Offer Job Endpoint (CommonJS)
- * Version: 7.0.4-patch-4.3.6
+ * Process Offer Job Handler (CommonJS)
+ * Version: 7.0.4-patch-4.3.9
+ *
+ * NOTE: CORS is handled in the .js route files (4.3.8).
  */
 
-const applyCors = require("../lib/cors.cjs");
 const { createSupabaseClient } = require("../lib/supabase.cjs");
 
-// Import libraries (same as generate-offer)
-const workTasksDB = require("../lib/work-tasks-database.cjs");
-const materialsDB = require("../lib/materials-database.cjs");
-const rentalItemsDB = require("../lib/rental-items-database.cjs");
-const standardCatalog = require("../lib/standard-catalog.cjs");
-const fewShotDB = require("../lib/few-shot-database.cjs");
-const { formatOfferOutput } = require("../lib/offer-utils.cjs");
-const aiDatabaseSearch = require("../lib/ai-database-search.cjs");
-const aiProcessOntology = require("../lib/ai-process-ontology.cjs");
-const aiTwoPassSchema = require("../lib/ai-two-pass-schema.cjs");
-const aiValidatorPolicy = require("../lib/ai-validator-policy.cjs");
-const advancedOfferAnalyzer = require("../lib/advanced-offer-analyzer.cjs");
-const offerLearning = require("../lib/offer-learning.cjs");
-
-module.exports = async function handler(req, res) {
-  if (applyCors(req, res)) {
-    return res.status(204).end();
+// Helper: require a module regardless of .cjs/.js extension
+function req(pathNoExt) {
+  try {
+    return require(pathNoExt + ".cjs");
+  } catch (e1) {
+    try {
+      return require(pathNoExt + ".js");
+    } catch (e2) {
+      throw e1;
+    }
   }
+}
 
-  if (req.method !== "POST") {
+// Import libraries (same as generate-offer, extension-agnostic)
+const workTasksDB = req("../lib/work-tasks-database");
+const materialsDB = req("../lib/materials-database");
+const rentalItemsDB = req("../lib/rental-items-database");
+const standardCatalog = req("../lib/standard-catalog");
+const fewShotDB = req("../lib/few-shot-database");
+const { formatOfferOutput } = req("../lib/offer-utils");
+const aiDatabaseSearch = req("../lib/ai-database-search");
+const aiProcessOntology = req("../lib/ai-process-ontology");
+const aiTwoPassSchema = req("../lib/ai-two-pass-schema");
+const aiValidatorPolicy = req("../lib/ai-validator-policy");
+const advancedOfferAnalyzer = req("../lib/advanced-offer-analyzer");
+const offerLearning = req("../lib/offer-learning");
+
+module.exports = async function handler(req_, res) {
+  if (req_.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const jobSecret = req.headers["x-job-secret"];
+  const jobSecret = req_.headers["x-job-secret"];
   if (jobSecret !== process.env.JOB_SECRET) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
-    const { jobId } = req.body;
-    if (!jobId) {
-      return res.status(400).json({ error: "jobId is required" });
-    }
+    const { jobId } = req_.body || {};
+    if (!jobId) return res.status(400).json({ error: "jobId is required" });
 
     const supabase = createSupabaseClient();
 
@@ -143,25 +151,27 @@ module.exports = async function handler(req, res) {
       success: true,
       jobId,
       status: "completed",
-      version: "7.0.4-patch-4.3.6"
+      version: "7.0.4-patch-4.3.9"
     });
   } catch (error) {
     console.error("[process-offer-job-handler.cjs] Error:", error);
 
-    const supabase = createSupabaseClient();
-    await supabase
-      .from("offer_jobs")
-      .update({
-        status: "failed",
-        error: error.message,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", req.body.jobId);
+    try {
+      const supabase = createSupabaseClient();
+      await supabase
+        .from("offer_jobs")
+        .update({
+          status: "failed",
+          error: error.message,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", req_.body?.jobId);
+    } catch (_) {}
 
     return res.status(500).json({
       error: "Processing failed",
       message: error.message,
-      version: "7.0.4-patch-4.3.6"
+      version: "7.0.4-patch-4.3.9"
     });
   }
 };
