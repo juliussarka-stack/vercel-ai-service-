@@ -1,33 +1,4 @@
-// api/generate-offer-stream.ts
-// Version: 7.0.4-patch-4.3.5
-
-// Importera CORS helpern (CJS)
-const applyCors = require("./lib/cors.cjs");
-
-export default async function handler(req: any, res: any) {
-  // ✅ CORS + preflight
-  if (applyCors(req, res)) {
-    return res.status(204).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  try {
-    // ...din befintliga stream-logik här...
-    // Viktigt: CORS-headers är redan satta innan streaming börjar.
-
-  } catch (err: any) {
-    console.error("[generate-offer-stream.ts] Error:", err);
-    return res.status(500).json({
-      error: "Internal server error",
-      message: err.message,
-      version: "7.0.4-patch-4.3.5",
-    });
-  }
-}
-**
+/**
  * VERCEL AI OFFER GENERATION - STREAMING VERSION
  * Version: 2.0.0 - SSE/Streaming
  * 
@@ -42,6 +13,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import { Pass1Schema, getPass2Prompt, type ProjectPlan } from '../lib/ai-two-pass-schema.js';
+
+// ✅ PATCH 4.3.5: Centraliserad CORS helper (CJS)
+const applyCors = require("./lib/cors.cjs");
 
 export const config = {
   maxDuration: 60,
@@ -253,25 +227,9 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-// 🔧 CORS FIX - Allow Webflow domains
-const allowedOrigins = [
-  'https://gesa-company-ab.webflow.io',
-  'https://gesa-company-ab-julius-projects-ccea11c8.webflow.io',
-  'http://localhost:4321',
-  'http://localhost:3000'
-];
-
-const origin = req.headers.origin;
-if (origin && allowedOrigins.includes(origin)) {
-  res.setHeader('Access-Control-Allow-Origin', origin);
-}
-
-res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  // ✅ PATCH 4.3.5: CORS handling + preflight
+  if (applyCors(req, res)) {
+    return res.status(204).end();
   }
 
   if (req.method !== 'POST') {
