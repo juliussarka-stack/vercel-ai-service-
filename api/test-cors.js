@@ -1,2 +1,2 @@
-import handler from "./test-cors.cjs";
-export default handler;
+module.exports = require("./test-cors.cjs");
+
